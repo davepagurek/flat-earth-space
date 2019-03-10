@@ -1,4 +1,9 @@
 const G = 10;
+let moon, earth;
+function preload() {
+  moon = loadImage('assets/moon.png');
+  earth = loadImage('assets/earth.png');
+}
 
 class Explotion {
   constructor(pos) {
@@ -86,13 +91,15 @@ class Disc {
 
     translate(this.pos.x, this.pos.y, this.pos.z);
 
-    fill('#FFF');
-    stroke(0);
+    noStroke();
+    texture(earth);
 
     const points = 30;
     beginShape();
     for (let i = 0; i < points; i++) {
-      vertex(this.r * Math.cos(i*2*Math.PI/points), 0, this.r * Math.sin(i*2*Math.PI/points));
+      const u = Math.cos(i*2*Math.PI/points);
+      const v = Math.sin(i*2*Math.PI/points);
+      vertex(this.r * u, 0, this.r * v, u*0.5 + 0.5, v*0.5 + 0.5);
     }
     endShape(CLOSE);
 
@@ -165,8 +172,8 @@ class Sphere {
   render() {
     push();
     translate(this.pos.x, this.pos.y, this.pos.z);
-    fill('#FFF');
-    stroke(0);
+    fill(255, 255, 255);
+    noStroke();
     sphere(this.r);
     pop();
   }
@@ -180,20 +187,47 @@ class FixedSphere extends Sphere {
   update() {}
   calculateForce() {}
   checkCollisions() {}
+
+  render() {
+    push();
+    translate(this.pos.x, this.pos.y, this.pos.z);
+    noStroke();
+    texture(moon)
+    sphere(this.r);
+    pop();
+  }
 }
 
 let objects = [];
 let sfx = [];
+let stars = [];
+const earthWidth = 100;
 
 function setup() {
   createCanvas(400, 400, WEBGL);
-  objects.push(new Disc(100, createVector(0, 0, 0), 100));
+  objects.push(new Disc(earthWidth, createVector(0, 0, 0), 100));
   objects.push(new FixedSphere(20, createVector(0, -240, 0), 80));
-  objects.push(new Sphere(1, createVector(0, -35, 0), createVector(2, -4, 0), 1));
+  objects.push(new Sphere(3, createVector(0, -35, 0), createVector(2, -4, 0), 1));
+
+  for (let i = 0; i < 80; i++) {
+    stars.push(createVector(Math.random() * 1000 - 500, Math.random() * 10000 - 5000, -Math.random() * 200 - 100));
+  }
+}
+
+const drawStars = () => {
+  noStroke();
+  fill('#FFF');
+  stars.forEach(s => {
+    push();
+    translate(s.x, s.y, s.z);
+    sphere(2);
+    pop();
+  });
 }
 
 let cameraY = 0;
 let cameraZ = 80;
+let nextMouse = null;
 let nextLoc = null;
 let nextVel = null;
 
@@ -220,42 +254,52 @@ function draw() {
   }
 
   translate(0, -cameraY, -cameraZ);
-  background(200);
-  objects.forEach(o => o.render());
-  sfx.forEach(o => o.render());
-
+  rotateX(-0.1);
+  background(0);
   if (nextLoc !== null) {
+    fill(255, 0, 255);
     noStroke();
-    fill('#F0F');
 
     push();
     translate(nextLoc.x, nextLoc.y, nextLoc.z);
     sphere(3);
 
-    stroke(0);
-    line(0, 0, 0, nextVel.x, nextVel.y, nextVel.z);
+    push();
+    rotateZ(-Math.PI/2);
+    rotateZ(Math.atan2(nextVel.y, nextVel.x));
+    const mag = nextVel.mag();
+    translate(0, mag/2, 0);
+    scale(2, mag, 2);
+    fill(255, 0, 255);
+    noStroke();
+    cylinder(1, 1);
+    pop();
     pop();
   }
+  objects.forEach(o => o.render());
+  sfx.forEach(o => o.render());
+  drawStars();
 }
 
 const worldMousePos = () => createVector(mouseX - width/2, mouseY - height/2 + cameraY/10, 0);
 
 function mousePressed() {
-  nextLoc = worldMousePos();
+  nextMouse = worldMousePos();
+  nextLoc = createVector(Math.min(earthWidth, Math.max(-earthWidth, nextMouse.x)), 0, 0);
   nextVel = createVector(0, 0, 0);
 }
 
 function mouseDragged() {
   if (nextLoc !== null) {
-    nextVel = worldMousePos().sub(nextLoc);
-    console.log(nextVel);
+    nextVel = worldMousePos().sub(nextMouse);
   }
 }
 
 function mouseReleased() {
   if (nextLoc !== null) {
-    objects.push(new Sphere(1, nextLoc, nextVel.div(10), 1));
+    objects.push(new Sphere(3, nextLoc, nextVel.div(10), 1));
     nextLoc = null;
+    nextMouse = null;
     nextVel = null;
   }
 }
