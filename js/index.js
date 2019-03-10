@@ -1,8 +1,9 @@
 const G = 10;
-let moon, earth;
+let moon, earth, earthBottom;
 function preload() {
   moon = loadImage('assets/moon.png');
   earth = loadImage('assets/earth.png');
+  earthBottom = loadImage('assets/earthbottom.png');
 }
 
 class Explotion {
@@ -39,7 +40,7 @@ class Disc {
     const rSq = r * r;
 
     this.samplePoints = [];
-    while (this.samplePoints.length < 50) {
+    while (this.samplePoints.length < 80) {
       const p = createVector(
         this.r * (Math.random() * 2 - 1),
         0,
@@ -86,14 +87,7 @@ class Disc {
   avgY() { return this.pos.y; }
   avgX() { return this.r; }
 
-  render() {
-    push();
-
-    translate(this.pos.x, this.pos.y, this.pos.z);
-
-    noStroke();
-    texture(earth);
-
+  disc() {
     const points = 30;
     beginShape();
     for (let i = 0; i < points; i++) {
@@ -102,6 +96,20 @@ class Disc {
       vertex(this.r * u, 0, this.r * v, u*0.5 + 0.5, v*0.5 + 0.5);
     }
     endShape(CLOSE);
+  }
+
+  render() {
+    push();
+
+    translate(this.pos.x, this.pos.y, this.pos.z);
+
+    noStroke();
+    texture(earth);
+    this.disc();
+
+    texture(earthBottom);
+    translate(0, 0.5, 0);
+    this.disc();
 
     pop();
   }
@@ -205,8 +213,8 @@ const earthWidth = 100;
 
 function setup() {
   createCanvas(400, 400, WEBGL);
-  objects.push(new Disc(earthWidth, createVector(0, 0, 0), 100));
-  objects.push(new FixedSphere(20, createVector(0, -240, 0), 80));
+  objects.push(new Disc(earthWidth, createVector(0, 0, 0), 200));
+  objects.push(new FixedSphere(20, createVector(0, -240, 0), 160));
   objects.push(new Sphere(3, createVector(0, -35, 0), createVector(2, -4, 0), 1));
 
   for (let i = 0; i < 80; i++) {
