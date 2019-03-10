@@ -64,9 +64,11 @@ class Disc {
 
   update() {}
 
-  collisionWith(r, pos) {
+  collisionWith(r, pos, nextPos) {
     const distSq = pos.copy().sub(this.pos).magSq();
-    return distSq <= (r + this.r) * (r + this.r) && Math.abs(pos.y - this.pos.y) < 2;
+    let closeEnough = Math.abs(pos.y - this.pos.y) < 2;
+    closeEnough = closeEnough || ((pos.y - this.pos.y) * (nextPos.y - this.pos.y) < 0);
+    return distSq <= (r + this.r) * (r + this.r) && closeEnough;
   }
 
 
@@ -130,16 +132,17 @@ class Sphere {
   }
 
   checkCollisions(objects) {
+    const nextPos = this.pos.copy().add(this.vel);
     objects.forEach(o => {
       if (this.crashed || this === o) return;
 
-      if (o.collisionWith(this.r, this.pos)) {
+      if (o.collisionWith(this.r, this.pos, nextPos)) {
         this.crashed = true;
       }
     });
   }
 
-  collisionWith(r, pos) {
+  collisionWith(r, pos, nextPos) {
     const distSq = pos.copy().sub(this.pos).magSq();
     return distSq <= (r + this.r) * (r + this.r);
   }
@@ -209,11 +212,11 @@ function draw() {
     if (objects.length > 2) {
       avgY = objects.slice(2).reduce((accum, o) => accum + o.avgY(), 0) / (objects.length - 2);
     }
-    cameraY += (avgY - cameraY) / 4;
+    cameraY += (avgY - cameraY) / 12;
 
     maxX = objects.reduce((accum, o) => Math.max(accum, Math.abs(o.avgX())), 0);
     const targetZ = 100 * maxX;
-    cameraZ += (maxX - cameraZ) / 4;
+    cameraZ += (maxX - cameraZ) / 12;
   }
 
   translate(0, -cameraY, -cameraZ);
@@ -235,7 +238,7 @@ function draw() {
   }
 }
 
-const worldMousePos = () => createVector(mouseX - width/2, mouseY - height/2, 0);
+const worldMousePos = () => createVector(mouseX - width/2, mouseY - height/2 + cameraY/10, 0);
 
 function mousePressed() {
   nextLoc = worldMousePos();
