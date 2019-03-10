@@ -215,7 +215,7 @@ function setup() {
   createCanvas(800, 600, WEBGL);
   objects.push(new Disc(earthWidth, createVector(0, 0, 0), 100));
   objects.push(new FixedSphere(20, createVector(0, -240, 0), 80));
-  objects.push(new Sphere(3, createVector(0, -35, 0), createVector(2, -4, 0), 1));
+  //objects.push(new Sphere(3, createVector(0, -35, 0), createVector(2, -4, 0), 1));
 
   for (let i = 0; i < 120; i++) {
     stars.push(createVector(Math.random() * 1000 - 500, Math.random() * 10000 - 5000, -Math.random() * 200 - 100));
